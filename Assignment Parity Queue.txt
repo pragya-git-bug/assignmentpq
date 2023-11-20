@@ -1,0 +1,274 @@
+Assignment Parity Queue
+
+Answer1
+package priorityQueueAssignment;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
+
+/*Q1. Given a string s, rearrange the characters of s so that any two adjacent characters are not 
+ * the same.
+Return any possible rearrangement of s or return "" if not possible.
+Example 1:
+Input: s = "aab"
+Output: "aba"
+Example 2:
+Input: s = "aaab"
+Output: ""*/
+public class Q1 {
+	public static void main(String[] args) {
+		String s = "aab";
+		System.out.println("Output " + rearrangeString(s));
+	}
+
+	public static String rearrangeString(String s) {
+		// Create a character frequency map
+		Map<Character, Integer> charFrequency = new HashMap<>();
+		for (char c : s.toCharArray()) {
+			charFrequency.put(c, charFrequency.getOrDefault(c, 0) + 1);
+		}
+
+		// Create a priority queue (min heap) to store characters based on frequency
+		PriorityQueue<Character> pq = new PriorityQueue<>((a, b) -> {
+			if (charFrequency.get(a).equals(charFrequency.get(b))) {
+				return a.compareTo(b); // Sort by lexicographical order if frequencies are equal
+			}
+			return charFrequency.get(a) - charFrequency.get(b); // Sort by frequency
+		});
+
+		// Add characters to the priority queue
+		pq.addAll(charFrequency.keySet());
+
+		// Build the rearranged string
+		StringBuilder rearranged = new StringBuilder();
+		
+		while (pq.size() > 1) {
+			char first = pq.poll();
+			char second = pq.poll();
+
+			rearranged.append(first);
+			rearranged.append(second);
+
+			charFrequency.put(first, charFrequency.get(first) - 1);
+			charFrequency.put(second, charFrequency.get(second) - 1);
+
+			if (charFrequency.get(first) > 0) {
+				pq.offer(first);
+			}
+			if (charFrequency.get(second) > 0) {
+				pq.offer(second);
+			}
+		}
+
+		if (!pq.isEmpty()) {
+			char last = pq.poll();
+			rearranged.append(last);
+			charFrequency.put(last, charFrequency.get(last) - 1);
+		}
+
+		if (rearranged.length() == s.length()) {
+			return rearranged.toString();
+		} else {
+			return "";
+		}
+	}
+}
+
+Answer2
+package priorityQueueAssignment;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.PriorityQueue;
+
+/*Q2. You are given two integer arrays nums1 and nums2 sorted in ascending order and an integer k.
+Define a pair (u, v) which consists of one element from the first array and one element from the second
+array.
+Return the k pairs (u1, v1), (u2, v2), ..., (uk, vk) with the smallest sums.
+
+Example 1:
+Input: nums1 = [1,7,11], nums2 = [2,4,6], k = 3
+Output: [[1,2],[1,4],[1,6]]
+Explanation: The first 3 pairs are returned from the sequence: 
+[1,2],[1,4],[1,6],[7,2],[7,4],[11,2],[7,6],[11,4],[11,6]
+
+Example 2:
+Input: nums1 = [1,1,2], nums2 = [1,2,3], k = 2
+Output: [[1,1],[1,1]]
+Explanation: The first 2 pairs are returned from the sequence: 
+[1,1],[1,1],[1,2],[2,1],[1,2],[2,2],[1,3],[1,3],[2,3]
+
+Example 3:
+Input: nums1 = [1,2], nums2 = [3], k = 3
+Output: [[1,3],[2,3]]
+Explanation: All possible pairs are returned from the sequence: [1,3],[2,3]*/
+public class Q2 {
+	public static void main(String[] args) {
+		int[] nums1 = {1, 7, 11};
+        int[] nums2 = {2, 4, 6};
+        int k = 3;
+        List<List<Integer>> result = kSmallestPairs(nums1, nums2, k);
+        System.out.println("Output : " + result);
+	}
+
+	private static List<List<Integer>> kSmallestPairs(int[] nums1, int[] nums2, int k) {
+		List<List<Integer>> result = new ArrayList<>();
+
+        // Create a min heap (priority queue) to store the pairs along with their sums
+        PriorityQueue<int[]> minHeap = new PriorityQueue<>(Comparator.comparingInt(a -> a[0] + a[1]));
+
+        // Add pairs (u, v) with sums to the min heap
+        for (int u : nums1) {
+            for (int v : nums2) {
+                minHeap.offer(new int[]{u, v});
+            }
+        }
+
+        // Remove the pair with the smallest sum until the min heap has k elements
+        while (k > 0 && !minHeap.isEmpty()) {
+            int[] pair = minHeap.poll();
+            result.add(Arrays.asList(pair[0], pair[1]));
+            k--;
+        }
+
+        return result;
+	}
+}
+
+Answer3
+package priorityQueueAssignment;
+
+import java.util.PriorityQueue;
+
+/*Q3. You are playing a solitaire game with three piles of stones of sizes a​, b,​ and c​ respectively. 
+Each turn you choose two different non-empty piles, take one stone from each, and add 1 point to
+your score. The game stops when there are fewer than two non-empty piles 
+(meaning there are no more available moves).
+
+Given three integers a​, b,​ and c​, return the maximum score you can get.
+
+Example 1:
+Input: a = 2, b = 4, c = 6
+Output: 6
+Explanation: The starting state is (2, 4, 6). One optimal set of moves is:
+- Take from 1st and 3rd piles, state is now (1, 4, 5)
+- Take from 1st and 3rd piles, state is now (0, 4, 4)
+- Take from 2nd and 3rd piles, state is now (0, 3, 3)
+- Take from 2nd and 3rd piles, state is now (0, 2, 2)
+Take from 2nd and 3rd piles, state is now (0, 1, 1)
+- Take from 2nd and 3rd piles, state is now (0, 0, 0)
+There are fewer than two non-empty piles, so the game ends. Total: 6 points.
+
+Example 2:
+Input: a = 4, b = 4, c = 6
+Output: 7
+Explanation: The starting state is (4, 4, 6). One optimal set of moves is:
+- Take from 1st and 2nd piles, state is now (3, 3, 6)
+- Take from 1st and 3rd piles, state is now (2, 3, 5)
+- Take from 1st and 3rd piles, state is now (1, 3, 4)
+- Take from 1st and 3rd piles, state is now (0, 3, 3)
+- Take from 2nd and 3rd piles, state is now (0, 2, 2)
+- Take from 2nd and 3rd piles, state is now (0, 1, 1)
+- Take from 2nd and 3rd piles, state is now (0, 0, 0)
+There are fewer than two non-empty piles, so the game ends. Total: 7 points.*/
+public class Q3 {
+	public static void main(String[] args) {
+		int a = 2, b = 4, c = 6;
+		int maxScore = maximumScore(a, b, c);
+		System.out.println("Maximum Score: " + maxScore);
+	}
+
+	private static int maximumScore(int a, int b, int c) {
+		// maxheap
+		PriorityQueue<Integer> maxHeap = new PriorityQueue<Integer>((a1, b1) -> (b1 - a1));
+
+		// store in maxHeap
+		maxHeap.add(a);
+		maxHeap.add(b);
+		maxHeap.add(c);
+
+		int score = 0;
+		while (maxHeap.size() > 1) {
+			// find first two max number
+			int maxNum1 = maxHeap.remove();
+			int maxNum2 = maxHeap.remove();
+
+			// decrement both
+			maxNum1--;
+			maxNum2--;
+
+			// only add in heap, if greater than 0
+			if (maxNum1 > 0)
+				maxHeap.add(maxNum1);
+			if (maxNum2 > 0)
+				maxHeap.add(maxNum2);
+
+			// increase score
+			score++;
+		}
+
+		return score;
+	}
+}
+
+Answer4
+package heapAssignment;
+
+import java.util.PriorityQueue;
+
+/*Q4. You are given an array of integer stones where stones[i] is the weight of the ith stone. We are playing a
+game with the stones. On each turn, we choose the heaviest two stones and smash them together. Suppose
+the heaviest two stones have weights x and y with x <= y. The result of this smash is:
+If x == y, both stones are destroyed, and
+If x != y, the stone of weight x is destroyed, and the stone of weight y has new weight y - x.
+At the end of the game, there is at most one stone left.
+Return the weight of the last remaining stone. If there are no stones left, return 0.
+Example 1:
+Input: stones = [2,7,4,1,8,1]
+Output: 1
+Explanation:
+We combine 7 and 8 to get 1 so the array converts to [2,4,1,1,1] then,
+we combine 2 and 4 to get 2 so the array converts to [2,1,1,1] then,
+we combine 2 and 1 to get 1 so the array converts to [1,1,1] then,
+we combine 1 and 1 to get 0 so the array converts to [1] then that's the value of the last stone.
+Example 2:
+Input: stones = [1]
+Output: 1*/
+public class Q4 {
+	public static void main(String[] args) {
+		int[] stones = { 2, 7, 4, 1, 8, 1 };
+		int result = lastStoneWeight(stones);
+		System.out.println("Output 1: " + result);
+	}
+
+	private static int lastStoneWeight(int[] stones) {
+		// Create a max heap (priority queue) to store the weights of the stones
+		PriorityQueue<Integer> maxHeap = new PriorityQueue<>((a, b) -> b - a);
+
+		// Insert all the stone weights into the max heap
+		for (int weight : stones) {
+			maxHeap.offer(weight);
+		}
+
+		// Smash the stones until there is at most one stone left
+		while (maxHeap.size() > 1) {
+			int heaviest1 = maxHeap.poll(); // Extract the first heaviest stone
+			int heaviest2 = maxHeap.poll(); // Extract the second heaviest stone
+
+			if (heaviest1 != heaviest2) {
+				int difference = Math.abs(heaviest1 - heaviest2);
+				maxHeap.offer(difference); // Insert the difference back into the max heap
+			}
+		}
+
+		// Check if there is one stone remaining or no stones left
+		if (maxHeap.isEmpty()) {
+			return 0;
+		} else {
+			return maxHeap.peek(); // Return the weight of the last remaining stone
+		}
+	}
+}
